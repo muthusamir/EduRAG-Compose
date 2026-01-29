@@ -1,0 +1,30 @@
+from edurag.cache import Cache
+from edurag.coag import CoAG
+from edurag.graph_reasoner import GraphReasoner
+from edurag.generator import Generator
+
+class EduRAGCompose:
+    def __init__(self, retriever):
+        self.retriever = retriever
+        self.cache = Cache()
+        self.coag = CoAG()
+        self.graph = GraphReasoner()
+        self.generator = Generator()
+
+    def answer(self, query, embedder):
+        cached = self.cache.get(query)
+        if cached:
+            return cached
+
+        q_emb = embedder.encode([query])[0]
+        docs = self.retriever.retrieve(q_emb)
+        self.graph.build_graph(docs)
+
+        subqueries = self.coag.generate_subqueries(query)
+        reasoning_terms = self.graph.traverse(query.split())
+
+        context = " ".join(docs + reasoning_terms + subqueries)
+        answer = self.generator.generate(context, query)
+
+        self.cache.set(query, answer)
+        return answer
