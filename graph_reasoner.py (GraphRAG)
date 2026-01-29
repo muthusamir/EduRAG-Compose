@@ -1,0 +1,19 @@
+import networkx as nx
+
+class GraphReasoner:
+    def __init__(self):
+        self.graph = nx.Graph()
+
+    def build_graph(self, docs):
+        for doc in docs:
+            words = doc.split()
+            for i in range(len(words)-1):
+                self.graph.add_edge(words[i], words[i+1])
+
+    def traverse(self, start_terms):
+        paths = []
+        for term in start_terms:
+            if term in self.graph:
+                neighbors = list(self.graph.neighbors(term))
+                paths.extend(neighbors)
+        return list(set(paths))
