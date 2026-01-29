@@ -1,0 +1,21 @@
+import faiss
+import numpy as np
+from sklearn.cluster import KMeans
+
+class LightRAGRetriever:
+    def __init__(self, embeddings, texts, n_clusters=10):
+        self.texts = texts
+        self.embeddings = embeddings
+        self.kmeans = KMeans(n_clusters=n_clusters).fit(embeddings)
+        self.centroids = self.kmeans.cluster_centers_
+        self.index = faiss.IndexFlatL2(embeddings.shape[1])
+        self.index.add(embeddings)
+
+    def retrieve(self, query_emb, top_k=5):
+        cluster = self.kmeans.predict([query_emb])[0]
+        cluster_idxs = np.where(self.kmeans.labels_ == cluster)[0]
+        sub_embs = self.embeddings[cluster_idxs]
+        sub_index = faiss.IndexFlatL2(sub_embs.shape[1])
+        sub_index.add(sub_embs)
+        D, I = sub_index.search(np.array([query_emb]), top_k)
+        return [self.texts[cluster_idxs[i]] for i in I[0]]
