@@ -1,0 +1,17 @@
+from fastapi import FastAPI
+from edurag.pipeline import EduRAGCompose
+from edurag.embeddings import Embedder
+from edurag.retriever import LightRAGRetriever
+import numpy as np
+
+app = FastAPI()
+
+texts = open("data/corpus.txt").read().split("\n")
+embedder = Embedder()
+embs = embedder.encode(texts)
+retriever = LightRAGRetriever(np.array(embs), texts)
+system = EduRAGCompose(retriever)
+
+@app.get("/ask")
+def ask(q: str):
+    return {"answer": system.answer(q, embedder)}
