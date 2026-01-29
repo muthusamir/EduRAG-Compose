@@ -1,0 +1,7 @@
+class CoAG:
+    def generate_subqueries(self, query):
+        return [
+            f"Explain {query}",
+            f"Give causes of {query}",
+            f"Give consequences of {query}"
+        ]
